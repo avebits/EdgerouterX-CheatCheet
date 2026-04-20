@@ -15,7 +15,7 @@ ssh username@192.168.1.1
 # Getting info before entering configure mode:
 ```show interfaces```
 
-# Enter configure mode: 
+## Enter configure mode: 
 ```configure```
 
 # Show interfaces
