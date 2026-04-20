@@ -13,18 +13,25 @@ P4 - WAN
 ssh username@192.168.1.1
 
 ### Getting info before entering configure mode:
-```show interfaces
+```
+show interfaces
 ```
 
 ### Enter configure mode: 
-```configure```
+```
+configure
+```
 
 ### Show interfaces
 ```show interfaces ethernet eth4```
 
 ### Identity & timezone:
-```set system host-name edge-x```
-```set system time-zone Europe/Oslo```
+```
+set system host-name edge-x
+```
+```
+set system time-zone Europe/Oslo
+```
 
 ### Quick setup:
 ```
@@ -69,8 +76,12 @@ exit
 ```
 
 as it is based on Debian Linux it supports things like:
-```commit ;save```
-```commit && save```
+```
+commit ;save
+```
+```
+commit && save
+```
 
 ## Advanced
 
