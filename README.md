@@ -13,7 +13,8 @@ P4 - WAN
 ssh username@192.168.1.1
 
 ### Getting info before entering configure mode:
-```show interfaces```
+```show interfaces
+```
 
 ### Enter configure mode: 
 ```configure```
@@ -71,7 +72,7 @@ as it is based on Debian Linux it supports things like:
 ```commit ;save```
 ```commit && save```
 
-# Advanced
+## Advanced
 
 ### DHCP server on LAN (ex. eth):
 ```
