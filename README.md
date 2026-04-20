@@ -59,6 +59,11 @@ set interfaces ethernet eth4 speed auto
 set interfaces ethernet eth4 address dhcp
 ```
 
+### verify the eth0 IP was acquired from DHCP:
+```
+show dhcp client leases
+```
+
 ### Example 'LAN (eth1): static gateway IP:
 ```
 set interfaces ethernet eth1 description 'LAN10'
@@ -168,6 +173,12 @@ set interfaces ethernet eth4 firewall local name WAN_LOCAL
 ### Secure admin:
 ```set system login user admin authentication plaintext-password 'STRONG_PASSWORD'```
 ```delete system login user ubnt```
+
+### Restrict Management Portals (SSH and WebUI)
+```
+set service ssh listen-address 192.168.10.1/24
+set service gui listen-address 192.168.10.1/24
+```
 
 ### Enable hardware offload for performance:
 ```set system offload hwnat enable```
