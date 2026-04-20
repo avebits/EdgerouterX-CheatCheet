@@ -1,5 +1,5 @@
-# EdgerouterX-CheatCheet
-CheatCheet for cli setup of the infamous Ubiquiti Edgerouter X
+# EdgerouterX-cheatcheet
+Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP, which is the one I have)
 
 WIP document follows... and assumes this setup:
 P0 - Admin
@@ -23,22 +23,22 @@ configure
 ```
 
 ### Show interfaces
-```show interfaces ethernet eth4```
-
-### Identity & timezone:
 ```
-set system host-name edge-x
-```
-```
-set system time-zone Europe/Oslo
+show interfaces
+show interfaces ethernet eth4
 ```
 
 ### Quick setup:
 ```
-set Interfaces ethernet eth4 address dhcp
-set Interfaces ethernet eth3 address 10.112.1.1/24
-set Interfaces ethernet eth4 description "WAN"
-set Interfaces ethernet eth3 description "LAN"
+set system host-name <hostname>
+set system domain-name <name.domain>
+set system name-server 1.1.1.1
+set system time-zone Europe/Oslo
+
+set interfaces ethernet eth4 address dhcp
+set interfaces ethernet eth4 description "WAN"
+set interfaces ethernet eth3 address 10.112.1.1/24
+set interfaces ethernet eth3 description "LAN"
 ```
 
 ### LAN (eth1-eth3) as a switch (sw0), with gateway IP 192.168.10.1/24:
@@ -59,7 +59,7 @@ set interfaces ethernet eth4 speed auto
 set interfaces ethernet eth4 address dhcp
 ```
 
-### verify the eth0 IP was acquired from DHCP:
+### verify IP was acquired from DHCP:
 ```
 show dhcp client leases
 ```
@@ -71,7 +71,16 @@ set interfaces ethernet eth1 address 192.168.10.1/24
 ```
 
 ### Disable unused ports:
-```set interfaces ethernet eth2 disable```
+```set interfaces ethernet eth3 disable```
+
+### Example vlan
+```
+set interfaces ethernet eth2 address 192.168.10.1/24
+set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 default-router 192.168.10.1
+set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 dns-server 192.168.10.1
+set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 start 192.168.10.10 stop 192.168.10.100
+set service dns forwarding listen-on eth2
+```
 
 # Commit and saving:
 ```
@@ -80,7 +89,7 @@ save
 exit
 ```
 
-as it is based on Debian Linux it supports things like:
+as it is based on Debian Linux it supports shortcuts like:
 ```
 commit ;save
 ```
@@ -139,9 +148,11 @@ resolvers.
 ```set service dhcp-server use-dnsmasq enable```
 ```set service dhcp-server shared-network-name LAN1 subnet 192.168.1.0/24 domain-name ubnt.local```
 
-### Setting a masquerade NAT Rule:
+### Setting a masquerade NAT Rule to translate all internal traffic thru eth4:
 ```
 set service nat rule 5000 description "WAN masquerade"
+set service nat rule 5000 log disable
+set service nat rule 5000 protocol all
 set service nat rule 5000 outbound-interface eth4
 set service nat rule 5000 type masquerade
 ```
@@ -174,18 +185,19 @@ set interfaces ethernet eth4 firewall local name WAN_LOCAL
 ```set system login user admin authentication plaintext-password 'STRONG_PASSWORD'```
 ```delete system login user ubnt```
 
-### Restrict Management Portals (SSH and WebUI)
+### Restrict admin management (SSH and WebUI)
 ```
 set service ssh listen-address 192.168.10.1/24
 set service gui listen-address 192.168.10.1/24
 ```
 
-### Enable hardware offload for performance:
+### Enable hardware offload for performance gain:
 ```set system offload hwnat enable```
 ```set system offload ipsec enable```
+https://help.uisp.com/hc/en-us/articles/22591077433879-EdgeRouter-Hardware-Offloading
 
-### Back up the config after commit via SSH/SCP
-```set system config-management commit-archive location scp://user:pass@ip/Some/Path/To/Backups```
+### Back up the config after a commit via SSH/SCP
+```set system config-management commit-archive location scp://user:pass@hostname/Some/Path/To/Backups```
 
 ### Disable SIP ALG: 
 ```set system conntrack modules sip disable```
@@ -202,5 +214,26 @@ set service gui
 commit
 ```
 
+## Update the firmware
 
+# show version information
+show version
+
+# show storage information
+show system storage
+show system image storage
+
+# show installed firmware images
+show system image
+
+# remove old system image (free up some space) 
+delete system image
+
+# download new firmware image
+add system image https://dl.ubnt.com/firmwares/edgemax/v1.10.x/ER-exxx.xxxxxx.tar
+
+# set default boot image, if required
+set system image default-boot
+
+## Wireguard / OpenVPN setup 
 
