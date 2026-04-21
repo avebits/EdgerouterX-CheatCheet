@@ -1,4 +1,4 @@
-# EdgerouterX-cheatcheet
+# EdgerouterX-cheatsheet
 Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP)
 
 ## ToDo
@@ -207,6 +207,21 @@ set firewall name WAN_IN rule 10 state related enable
 set interfaces ethernet eth0 firewall in name WAN_IN
 ```
 
+### Explicitly drop ICMP echo requests in to Eth4
+```
+set firewall name WAN_IN rule 20 action drop
+set firewall name WAN_IN rule 20 protocol icmp
+set firewall name WAN_IN rule 20 icmp type echo-request
+```
+
+### Allowing ping from a specific IP
+```
+set firewall name WAN_IN rule 15 action accept
+set firewall name WAN_IN rule 15 protocol icmp
+set firewall name WAN_IN rule 15 icmp type echo-request
+set firewall name WAN_IN rule 15 source address <ip>
+```
+
 ### Hair-pin NAT, allowing devices on the same internal network to access other internal devices using the network's external IP address, useful when internal clients need to access services hosted on internal servers via their public domain names or external IPs:
 ```set port-forward hairpin-nat enable```
 
@@ -256,28 +271,23 @@ commit
 ```
 show version
 ```
-
 ### show storage information
 ```
 show system storage
 show system image storage
 ```
-
 ### show installed firmware images
 ```
 show system image
 ```
-
 ### remove old system image (free up some space) 
 ```
 delete system image
 ```
-
 ### download new firmware image
 ```
 add system image https://dl.ubnt.com/firmwares/edgemax/v1.10.x/ER-exxx.xxxxxx.tar
 ```
-
 ### set default boot image, if required
 ```
 set system image default-boot
@@ -303,6 +313,7 @@ set interfaces switch switch0 vif 10 address 192.168.10.1/24
 set interfaces switch switch0 vif 20 address 192.168.20.1/24
 set interfaces switch switch0 vif 30 address 192.168.30.1/24
 ```
+
 ### Or, set vlan per access port:
 VLAN10 - Main LAN
 ```
@@ -320,6 +331,18 @@ set interfaces switch switch0 switch-port interface eth3 vlan pvid 30
 set interfaces switch switch0 switch-port interface eth3 vlan vid 30
 ```
 (Device → untagged traffic → router tags it with PVID → enters correct VLAN)
+
+Then trunking it:
+```
+set interfaces switch switch0 switch-port interface eth4 vlan vid 10
+set interfaces switch switch0 switch-port interface eth4 vlan vid 20
+set interfaces switch switch0 switch-port interface eth4 vlan vid 30
+```
+
+(native VLAN)
+```
+set interfaces switch switch0 switch-port interface eth4 vlan pvid 10
+```
 
 ### --> NAT
 set service nat rule 5000 outbound-interface eth0
