@@ -1,11 +1,6 @@
 # EdgerouterX-cheatcheet
 Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP)
 
-WIP document follows... and assumes this setup:
-- P0 == Admin
-- P1-3 == LAN
-- P4 == WAN
-
 ## ToDo
 - Clean up this document
 - Add OpenVPN/WireGuard server/klient
@@ -14,9 +9,26 @@ WIP document follows... and assumes this setup:
 
 ## Basics
 
-### Default admin
+### Starting notes. WIP document follows... :
+- P0 == Admin
+- P1-3 == LAN
+- P4 == WAN
+- 
 192.168.1.1/24 on Port 0. 
 ssh username@192.168.1.1
+
+shared-network-name = DHCP scope container
+shared-network-name → DHCP configuration grouping (service layer)
+
+vif = VLAN interface (actual network interface)
+vif → interface (Layer 3 binding to a VLAN)
+"Traffic tagged with VLAN 10 arrives → goes to this interface"
+
+vif 10              → VLAN ID
+192.168.10.0/24     → subnet
+LAN10               → DHCP name
+
+
 
 ### Getting info before entering configure mode:
 ```
@@ -131,23 +143,10 @@ etc.
 ```
 
 ### Network segmenting - Adding VLAN(s)
-#### Main VLAN
-```
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 start 192.168.10.50
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 stop 192.168.10.200
-```
-#### IOT VLAN
-```
-set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 range 0 start 192.168.20.50
-set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 range 0 stop 192.168.20.150
-```
+## Example vlan
 
-### Example vlan
-```
-set interfaces switch switch0 vif 10 address 192.168.10.1/24
-set interfaces switch switch0 vif 20 address 192.168.20.1/24
-set interfaces switch switch0 vif 30 address 192.168.30.1/24
 
+```
 set interfaces ethernet eth2 address 192.168.10.1/24
 set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 default-router 192.168.10.1
 set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 dns-server 192.168.10.1
@@ -174,20 +173,18 @@ set service dhcp-relay relay-options hop-count 10
 set service dhcp-relay relay-options max-size 576
 ```
 
-### DNS forwarding (router as caching DNS for clients):
-The router listens on LAN and forwards to upstream public resolvers; you can add your preferred
-resolvers.
+### DNS forwarding (router as caching DNS for clients)
 ### Enable DNS forwarding (dnsmasq) and listen on LAN interface:
 ```set service dns forwarding cache-size 150```
 ```set service dns forwarding listen-on eth1```
-### Forward to upstream resolvers (examples: Cloudflare and ):
+### Forward to upstream resolvers (examples: Cloudflare and ....):
 ```set service dns forwarding name-server 1.1.1.1```
 ```set service dns forwarding name-server 8.8.8.8```
 ### Forward local hostnames:
 ```set service dns forwarding system```
 ### Setting dnsmasq:
 ```set service dhcp-server use-dnsmasq enable```
-```set service dhcp-server shared-network-name LAN1 subnet 192.168.1.0/24 domain-name ubnt.local```
+```set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 domain-name ubnt.local```
 
 ### Setting a masquerade NAT Rule to translate all internal traffic thru eth4:
 ```
@@ -198,56 +195,15 @@ set service nat rule 5000 outbound-interface eth4
 set service nat rule 5000 type masquerade
 ```
 
-### VLAN Firewall example:
-Trusted main lan:
-```
-set firewall name LAN_IN default-action accept
-set interfaces switch switch0 vif 10 firewall in name LAN_IN
-```
-For IOT:
-```
-set firewall name IOT_IN default-action drop
-```
-#### allow established/related
-```
-set firewall name IOT_IN rule 10 action accept
-set firewall name IOT_IN rule 10 state established enable
-set firewall name IOT_IN rule 10 state related enable
-```
-#### allow DNS + DHCP
-```
-set firewall name IOT_IN rule 20 action accept
-set firewall name IOT_IN rule 20 protocol udp
-set firewall name IOT_IN rule 20 destination port 53,67,68
-```
-#### allow internet
-```
-set firewall name IOT_IN rule 30 action accept
-set firewall name IOT_IN rule 30 destination address 0.0.0.0/0
-```
-#### block access to LAN
-```
-set firewall name IOT_IN rule 40 action drop
-set firewall name IOT_IN rule 40 destination address 192.168.10.0/24
-```
-#### Last for IOT:
-```
-set interfaces switch switch0 vif 20 firewall in name IOT_IN
-```
-
-
 ### Minimal WAN firewall policy:
 ```
-set firewall name WAN_LOCAL default-action drop
-set firewall name WAN_LOCAL rule 10 action accept
-set firewall name WAN_LOCAL rule 10 state established enable
-set firewall name WAN_LOCAL rule 10 state related enable
 set firewall name WAN_IN default-action drop
+
 set firewall name WAN_IN rule 10 action accept
 set firewall name WAN_IN rule 10 state established enable
 set firewall name WAN_IN rule 10 state related enable
-set interfaces ethernet eth4 firewall in name WAN_IN
-set interfaces ethernet eth4 firewall local name WAN_LOCAL
+
+set interfaces ethernet eth0 firewall in name WAN_IN
 ```
 
 ### Hair-pin NAT, allowing devices on the same internal network to access other internal devices using the network's external IP address, useful when internal clients need to access services hosted on internal servers via their public domain names or external IPs:
@@ -313,6 +269,97 @@ add system image https://dl.ubnt.com/firmwares/edgemax/v1.10.x/ER-exxx.xxxxxx.ta
 
 # set default boot image, if required
 set system image default-boot
+
+# Example full VLAN+DHCP setup
+
+--> switch0
+ ├── VLAN10 → 192.168.10.0/24 (LAN)
+ ├── VLAN20 → 192.168.20.0/24 (IoT)
+ └── VLAN30 → 192.168.30.0/24 (Guest)
+
+### Setting switch and vlan interface:
+```
+set interfaces switch switch0
+set interfaces switch switch0 switch-port interface eth1
+set interfaces switch switch0 switch-port interface eth2
+set interfaces switch switch0 switch-port interface eth3
+```
+```
+set interfaces switch switch0 vif 10 address 192.168.10.1/24
+set interfaces switch switch0 vif 20 address 192.168.20.1/24
+set interfaces switch switch0 vif 30 address 192.168.30.1/24
+```
+### + NAT
+set service nat rule 5000 outbound-interface eth0
+set service nat rule 5000 type masquerade
+
+### Main VLAN10 dhcp
+```
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 default-router 192.168.10.1
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 dns-server 192.168.10.1
+
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 start 192.168.10.50
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 stop 192.168.10.200
+```
+### IOT VLAN20 dhcp
+```
+set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 default-router 192.168.20.1
+set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 dns-server 192.168.20.1
+
+set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 range 0 start 192.168.20.50
+set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 range 0 stop 192.168.20.150
+```
+### GUEST VLAN30 dhcp
+```
+set service dhcp-server shared-network-name GUEST subnet 192.168.30.0/24 default-router 192.168.30.1
+set service dhcp-server shared-network-name GUEST subnet 192.168.30.0/24 dns-server 192.168.30.1
+
+set service dhcp-server shared-network-name GUEST subnet 192.168.30.0/24 range 0 start 192.168.30.100
+set service dhcp-server shared-network-name GUEST subnet 192.168.30.0/24 range 0 stop 192.168.30.200
+```
+
+
+### VLAN Firewall example:
+LAN → allow everything
+IoT → limited access
+Guest → internet only
+
+
+Trusted main lan:
+```
+set firewall name LAN_IN default-action accept
+set interfaces switch switch0 vif 10 firewall in name LAN_IN
+```
+For IOT:
+```
+set firewall name IOT_IN default-action drop
+```
+#### allow established/related
+```
+set firewall name IOT_IN rule 10 action accept
+set firewall name IOT_IN rule 10 state established enable
+set firewall name IOT_IN rule 10 state related enable
+```
+#### allow DNS + DHCP
+```
+set firewall name IOT_IN rule 20 action accept
+set firewall name IOT_IN rule 20 protocol udp
+set firewall name IOT_IN rule 20 destination port 53,67,68
+```
+#### allow internet
+```
+set firewall name IOT_IN rule 30 action accept
+set firewall name IOT_IN rule 30 destination address 0.0.0.0/0
+```
+#### block access to LAN
+```
+set firewall name IOT_IN rule 40 action drop
+set firewall name IOT_IN rule 40 destination address 192.168.10.0/24
+```
+#### Last for IOT:
+```
+set interfaces switch switch0 vif 20 firewall in name IOT_IN
+```
 
 ## Wireguard / OpenVPN setup 
 
