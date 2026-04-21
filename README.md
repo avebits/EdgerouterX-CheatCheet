@@ -2,9 +2,9 @@
 Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP)
 
 WIP document follows... and assumes this setup:
-P0 - Admin
-P1-3 - LAN
-P4 - WAN
+- P0 == Admin
+- P1-3 == LAN
+- P4 == WAN
 
 ## ToDo
 - Clean up this
