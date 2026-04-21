@@ -1,5 +1,5 @@
 # EdgerouterX-cheatcheet
-Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP, which is the one I have)
+Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP)
 
 WIP document follows... and assumes this setup:
 P0 - Admin
