@@ -20,8 +20,8 @@ Starting notes. WIP document follows... :
 - P1-3 == LAN
 - P4   == WAN
 
-- 192.168.1.1/24 on Port 0. 
-- ssh username@192.168.1.1
+* 192.168.1.1/24 on Port 0. 
+* ssh username@192.168.1.1
 
 shared-network-name = DHCP scope container
 shared-network-name → DHCP configuration grouping (service layer)
