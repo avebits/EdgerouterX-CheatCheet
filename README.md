@@ -6,6 +6,10 @@ P0 - Admin
 P1-3 - LAN
 P4 - WAN
 
+## ToDo
+- clean up this
+- Add OpenVPN/WireGuard
+
 ## Basics
 
 ### Default admin
