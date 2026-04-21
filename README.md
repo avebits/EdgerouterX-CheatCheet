@@ -8,7 +8,7 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X
 - Segment on vyos.io ?
 - ???
 
-# ___________________________________________________________________________
+# _______________________________________________________________
 - Basics
 - Advanced
 - Full VLAN+DHCP setup
