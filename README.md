@@ -13,18 +13,15 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X
 - Advanced
 - Full VLAN+DHCP setup
 
-
-## Basics
-
 WIP document notes:
 - P0   == Admin
 - P1-3 == LAN
 - P4   == WAN
 
---> 192.168.1.1/24 on Port 0. 
---> ssh username@192.168.1.1
+→ 192.168.1.1/24 on Port 0. 
+→ ssh username@192.168.1.1
 
-#### shared-network-name = DHCP scope container
+→ shared-network-name = DHCP scope container
 #### shared-network-name → DHCP configuration grouping (service layer)
 #### vif = VLAN interface (actual network interface)
 #### vif → interface (Layer 3 binding to a VLAN)
@@ -33,6 +30,8 @@ WIP document notes:
 vif 10              → VLAN ID
 192.168.10.0/24     → subnet
 LAN10               → DHCP name
+
+## Basics
 
 ### Getting info before entering configure mode:
 ```
