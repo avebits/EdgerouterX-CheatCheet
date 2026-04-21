@@ -8,8 +8,8 @@ WIP document follows... and assumes this setup:
 
 ## ToDo
 - Clean up this document
-- Add OpenVPN/WireGuard
-- https://vyos.io/ ?
+- Add OpenVPN/WireGuard server/klient
+- Segment on vyos.io ?
 - ???
 
 ## Basics
@@ -45,10 +45,20 @@ set interfaces ethernet eth4 address dhcp
 set interfaces ethernet eth4 description "WAN"
 set interfaces ethernet eth3 address 10.112.1.1/24
 set interfaces ethernet eth3 description "LAN"
+
+set service nat rule 5000 outbound-interface eth4
+set service nat rule 5000 type masquerade
+```
+
+### Enable/Disable ports:
+```
+set interfaces ethernet eth2 enable
+set interfaces ethernet eth3 disable
 ```
 
 ### LAN (eth1-eth3) as a switch (sw0), with gateway IP 192.168.10.1/24:
 ```
+set interfaces switch switch0
 set interfaces switch switch0 description 'LAN'
 set interfaces switch switch0 address 192.168.10.1/24
 set interfaces switch switch0 mtu 1500
@@ -57,7 +67,7 @@ set interfaces switch switch0 switch-port interface eth2
 set interfaces switch switch0 switch-port interface eth3
 ```
 
-### WAN (eth4): DHCP client + basic firewall:
+### WAN (eth4): DHCP client:
 ```
 set interfaces ethernet eth4 description 'WAN'
 set interfaces ethernet eth4 duplex auto
@@ -70,55 +80,81 @@ set interfaces ethernet eth4 address dhcp
 show dhcp client leases
 ```
 
-### Example 'LAN (eth1): static gateway IP:
+### Example LAN (eth1): static gateway IP:
 ```
 set interfaces ethernet eth1 description 'LAN10'
 set interfaces ethernet eth1 address 192.168.10.1/24
 ```
 
-### Disable unused ports:
-```set interfaces ethernet eth3 disable```
-
-### Example vlan
-```
-set interfaces ethernet eth2 address 192.168.10.1/24
-set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 default-router 192.168.10.1
-set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 dns-server 192.168.10.1
-set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 start 192.168.10.10 stop 192.168.10.100
-set service dns forwarding listen-on eth2
-```
-
-# Commit and saving:
+### Commit, saving and exit:
 ```
 commit
 save
 exit
 ```
 
-as it is based on Debian Linux it supports shortcuts like:
+As it is based on Debian Linux it supports shortcuts like:
 ```
 commit ;save
 ```
 ```
 commit && save
 ```
+```
+command | command
+```
 
 ## Advanced
 
-### DHCP server on LAN (ex. eth):
+### MAC - IP binding
+```
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 static-mapping printer mac-address aa:bb:cc:dd:ee:ff
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 static-mapping printer ip-address 192.168.10.10
+```
+
+### DHCP server on LAN (ex.):
 ```
 set service dhcp-server disabled false
-set service dhcp-server shared-network-name LAN10 authoritative enable
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 default-router 192.
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 dns-server 192.168.
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 lease 86400
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 start 192.168.10.10
+set service dhcp-server shared-network-name LAN authoritative enable
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 default-router 192.168.2.2
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 dns-server 192.168.2.3
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 lease 86400
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 0 start 192.168.10.10
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 0 stop 192.168.10.100
 
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 1 start 192.168.10.105
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 1 stop 192.168.10.150
 
-set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 default-router 192.168.10.1
-set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 dns-server 192.168.10.1
-set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 0 start 192.168.10.100
-set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 0 stop 192.168.10.200
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 2 start 192.168.10.200
+set service dhcp-server shared-network-name LAN subnet 192.168.10.0/24 range 2 stop 192.168.10.240
+etc.
+```
+
+### Network segmenting - Adding VLAN(s)
+#### Main VLAN
+```
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 start 192.168.10.50
+set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 stop 192.168.10.200
+```
+#### IOT VLAN
+```
+set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 range 0 start 192.168.20.50
+set service dhcp-server shared-network-name IOT subnet 192.168.20.0/24 range 0 stop 192.168.20.150
+```
+
+### Example vlan
+```
+set interfaces switch switch0 vif 10 address 192.168.10.1/24
+set interfaces switch switch0 vif 20 address 192.168.20.1/24
+set interfaces switch switch0 vif 30 address 192.168.30.1/24
+
+set interfaces ethernet eth2 address 192.168.10.1/24
+set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 default-router 192.168.10.1
+set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 dns-server 192.168.10.1
+set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 start 192.168.10.10 stop 192.168.10.100
+set service dns forwarding listen-on eth2
+
+set interfaces switch switch0 vlan-aware enable
 ```
 
 ### Removing DCHP service
@@ -149,7 +185,6 @@ resolvers.
 ```set service dns forwarding name-server 8.8.8.8```
 ### Forward local hostnames:
 ```set service dns forwarding system```
-
 ### Setting dnsmasq:
 ```set service dhcp-server use-dnsmasq enable```
 ```set service dhcp-server shared-network-name LAN1 subnet 192.168.1.0/24 domain-name ubnt.local```
@@ -162,6 +197,44 @@ set service nat rule 5000 protocol all
 set service nat rule 5000 outbound-interface eth4
 set service nat rule 5000 type masquerade
 ```
+
+### VLAN Firewall example:
+Trusted main lan:
+```
+set firewall name LAN_IN default-action accept
+set interfaces switch switch0 vif 10 firewall in name LAN_IN
+```
+For IOT:
+```
+set firewall name IOT_IN default-action drop
+```
+#### allow established/related
+```
+set firewall name IOT_IN rule 10 action accept
+set firewall name IOT_IN rule 10 state established enable
+set firewall name IOT_IN rule 10 state related enable
+```
+#### allow DNS + DHCP
+```
+set firewall name IOT_IN rule 20 action accept
+set firewall name IOT_IN rule 20 protocol udp
+set firewall name IOT_IN rule 20 destination port 53,67,68
+```
+#### allow internet
+```
+set firewall name IOT_IN rule 30 action accept
+set firewall name IOT_IN rule 30 destination address 0.0.0.0/0
+```
+#### block access to LAN
+```
+set firewall name IOT_IN rule 40 action drop
+set firewall name IOT_IN rule 40 destination address 192.168.10.0/24
+```
+#### Last for IOT:
+```
+set interfaces switch switch0 vif 20 firewall in name IOT_IN
+```
+
 
 ### Minimal WAN firewall policy:
 ```
