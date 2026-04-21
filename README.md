@@ -7,13 +7,19 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towar
 - Segment on vyos.io ?
 - ???
 
+# Topics:
+- Basics
+- Advanced
+- Full VLAN+DHCP setup
+- 
+
 ## Basics
 
 ### Starting notes. WIP document follows... :
-- P0 == Admin
+- P0   == Admin
 - P1-3 == LAN
-- P4 == WAN
-- 
+- P4   == WAN
+
 192.168.1.1/24 on Port 0. 
 ssh username@192.168.1.1
 
@@ -27,8 +33,6 @@ vif → interface (Layer 3 binding to a VLAN)
 vif 10              → VLAN ID
 192.168.10.0/24     → subnet
 LAN10               → DHCP name
-
-
 
 ### Getting info before entering configure mode:
 ```
@@ -144,8 +148,6 @@ etc.
 
 ### Network segmenting - Adding VLAN(s)
 ## Example vlan
-
-
 ```
 set interfaces ethernet eth2 address 192.168.10.1/24
 set service dhcp-server shared-network-name vlan10 subnet 192.168.10.1/24 default-router 192.168.10.1
@@ -162,8 +164,7 @@ delete service dhcp-server shared-network-name LAN10
 delete interfaces ethernet eth3 address dhcp
 ```
 
-### DHCP relay (use instead of DHCP server when an external DHCP:
-server is present)
+### DHCP relay (use instead of DHCP server when an external DHCP: server is present)
 ### Remove/disable DHCP server for that LAN if previously enabled
 ### Relay requests arriving on LAN to upstream DHCP server
 ```
@@ -237,7 +238,7 @@ https://help.uisp.com/hc/en-us/articles/22591077433879-EdgeRouter-Hardware-Offlo
 ### Disable SIP ALG: 
 ```set system conntrack modules sip disable```
 
-### Restart Crashed / Hanging Web GUI
+### Restart crashed/hanging web gui
 1. Kill lighttpd process manually first, otherwise the delete delete service command hangs
 ```pkill -9 -f lighttpd```
 2. Delete and re-add the GUI service
@@ -249,28 +250,41 @@ set service gui
 commit
 ```
 
-## Update the firmware
+## Update the firmware:
 
-# show version information
+### show version information
+```
 show version
+```
 
-# show storage information
+### show storage information
+```
 show system storage
 show system image storage
+```
 
-# show installed firmware images
+### show installed firmware images
+```
 show system image
+```
 
-# remove old system image (free up some space) 
+### remove old system image (free up some space) 
+```
 delete system image
+```
 
-# download new firmware image
+### download new firmware image
+```
 add system image https://dl.ubnt.com/firmwares/edgemax/v1.10.x/ER-exxx.xxxxxx.tar
+```
 
-# set default boot image, if required
+### set default boot image, if required
+```
 set system image default-boot
+```
 
-# Example full VLAN+DHCP setup
+
+## Example full VLAN+DHCP setup
 
 --> switch0
  ├── VLAN10 → 192.168.10.0/24 (LAN)
@@ -289,7 +303,25 @@ set interfaces switch switch0 vif 10 address 192.168.10.1/24
 set interfaces switch switch0 vif 20 address 192.168.20.1/24
 set interfaces switch switch0 vif 30 address 192.168.30.1/24
 ```
-### + NAT
+### Or, set vlan per access port:
+VLAN10 - Main LAN
+```
+set interfaces switch switch0 switch-port interface eth1 vlan pvid 10
+set interfaces switch switch0 switch-port interface eth1 vlan vid 10
+```
+VLAN20 - IOT:
+```
+set interfaces switch switch0 switch-port interface eth2 vlan pvid 20
+set interfaces switch switch0 switch-port interface eth2 vlan vid 20
+```
+VLAN30 - Guests:
+```
+set interfaces switch switch0 switch-port interface eth3 vlan pvid 30
+set interfaces switch switch0 switch-port interface eth3 vlan vid 30
+```
+(Device → untagged traffic → router tags it with PVID → enters correct VLAN)
+
+### --> NAT
 set service nat rule 5000 outbound-interface eth0
 set service nat rule 5000 type masquerade
 
@@ -318,48 +350,74 @@ set service dhcp-server shared-network-name GUEST subnet 192.168.30.0/24 range 0
 set service dhcp-server shared-network-name GUEST subnet 192.168.30.0/24 range 0 stop 192.168.30.200
 ```
 
-
 ### VLAN Firewall example:
 LAN → allow everything
 IoT → limited access
 Guest → internet only
 
-
-Trusted main lan:
+### Trusted main lan:
 ```
 set firewall name LAN_IN default-action accept
 set interfaces switch switch0 vif 10 firewall in name LAN_IN
 ```
-For IOT:
+### IOT:
 ```
 set firewall name IOT_IN default-action drop
 ```
-#### allow established/related
+- allow established/related
 ```
 set firewall name IOT_IN rule 10 action accept
 set firewall name IOT_IN rule 10 state established enable
 set firewall name IOT_IN rule 10 state related enable
 ```
-#### allow DNS + DHCP
+- allow DNS + DHCP
 ```
 set firewall name IOT_IN rule 20 action accept
 set firewall name IOT_IN rule 20 protocol udp
 set firewall name IOT_IN rule 20 destination port 53,67,68
 ```
-#### allow internet
+- allow internet
 ```
 set firewall name IOT_IN rule 30 action accept
 set firewall name IOT_IN rule 30 destination address 0.0.0.0/0
 ```
-#### block access to LAN
+- block access to LAN
 ```
 set firewall name IOT_IN rule 40 action drop
 set firewall name IOT_IN rule 40 destination address 192.168.10.0/24
 ```
-#### Last for IOT:
+- Last line for IOT:
 ```
 set interfaces switch switch0 vif 20 firewall in name IOT_IN
 ```
 
+And for guests:
+```
+set firewall name GUEST_IN default-action drop
+```
+- allow established/related
+```
+set firewall name GUEST_IN rule 10 action accept
+set firewall name GUEST_IN rule 10 state established enable
+set firewall name GUEST_IN rule 10 state related enable
+```
+- allow DNS + DHCP
+```
+set firewall name GUEST_IN rule 20 action accept
+set firewall name GUEST_IN rule 20 protocol udp
+set firewall name GUEST_IN rule 20 destination port 53,67,68
+```
+- allow internet only
+```
+set firewall name GUEST_IN rule 30 action accept
+set firewall name GUEST_IN rule 30 destination address 0.0.0.0/0
+```
+- Last line for Guest:
+```
+set interfaces switch switch0 vif 30 firewall in name GUEST_IN
+```
+
+
 ## Wireguard / OpenVPN setup 
 
+## VyOS
