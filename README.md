@@ -15,7 +15,7 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towar
 
 ## Basics
 
-### Starting notes. WIP document follows... :
+Starting notes. WIP document follows... :
 - P0   == Admin
 - P1-3 == LAN
 - P4   == WAN
