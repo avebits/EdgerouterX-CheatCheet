@@ -26,7 +26,6 @@ WIP document notes:
 ssh username@192.168.1.1
 
 #### shared-network-name = DHCP scope container
-
 #### shared-network-name → DHCP configuration grouping (service layer)
 
 
