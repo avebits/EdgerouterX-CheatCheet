@@ -8,7 +8,7 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X
 - Segment on vyos.io ?
 - ???
 
-# _____________________________________________________
+# Topics
 - Basics
 - Advanced
 - Full VLAN+DHCP setup
@@ -37,7 +37,6 @@ vif 10              → VLAN ID
 LAN10               → DHCP name
 
 ## Basics
-
 ### Getting info before entering configure mode:
 ```
 show interfaces
