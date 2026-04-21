@@ -73,9 +73,11 @@ set interfaces ethernet eth3 disable
 ```
 
 ### LAN (eth1-eth3) as a switch (sw0), with gateway IP 192.168.10.1/24:
+
+This will be the layout:
 ```
 eth1 ─┐
-eth2 ─┼── switch0 (192.168.10.1/24) → router
+eth2 ─┼── switch0 (192.168.10.1/24) → router |switch0 = gateway interface|
 eth3 ─┘
 ```
 
@@ -302,11 +304,6 @@ set system image default-boot
 
 ## Example full VLAN+DHCP setup
 
---> switch0
- ├── VLAN10 → 192.168.10.0/24 (LAN)
- ├── VLAN20 → 192.168.20.0/24 (IoT)
- └── VLAN30 → 192.168.30.0/24 (Guest)
-
 ### Setting switch and vlan interface:
 ```
 set interfaces switch switch0
@@ -321,7 +318,23 @@ set interfaces switch switch0 vif 30 address 192.168.30.1/24
 ```
 
 ### Or, set vlan per access port:
-VLAN10 - Main LAN
+
+This will be the layout now with VLANs:
+```
+--> switch0
+ ├── vif10 VLAN10 → 192.168.10.0/24 (LAN)
+ ├── vif20 VLAN20 → 192.168.20.0/24 (IoT)
+ └── vif30 VLAN30 → 192.168.30.0/24 (Guest)
+```
+
+switch0.10 (vif 10) → 192.168.10.1 (gateway)
+switch0.20 (vif 20) → 192.168.20.1 (gateway)
+switch0.30 (vif 30) → 192.168.30.1 (gateway)
+
+Key takeaway here:
+Without VLANs → switch0 has the IP
+With VLANs → each vif has its own IP
+
 ```
 set interfaces switch switch0 switch-port interface eth1 vlan pvid 10
 set interfaces switch switch0 switch-port interface eth1 vlan vid 10
@@ -344,10 +357,27 @@ set interfaces switch switch0 switch-port interface eth4 vlan vid 10
 set interfaces switch switch0 switch-port interface eth4 vlan vid 20
 set interfaces switch switch0 switch-port interface eth4 vlan vid 30
 ```
-
 (native VLAN)
 ```
 set interfaces switch switch0 switch-port interface eth4 vlan pvid 10
+```
+
+## Remember
+*1 If switch0 exists with a single gateway address - ADD VLAN first! 
+*2 Then move ports into VLAN 10:
+```
+set interfaces switch switch0 vlan-aware enable
+set interfaces switch switch0 switch-port interface eth1 vlan pvid 10
+set interfaces switch switch0 switch-port interface eth1 vlan vid 10
+```
+(Do this for the port you’re connected on first, otherwise you’ll lock yourself out)
+*3 Then remove switch0's gateway. 
+```
+delete interfaces switch switch0 address 192.168.10.1/24
+```
+*4 Then commit with a timer, 5 minutes
+```
+commit-confirm 5
 ```
 
 ### --> NAT
@@ -357,7 +387,7 @@ set service nat rule 5000 type masquerade
 ### Main VLAN10 dhcp
 ```
 set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 default-router 192.168.10.1
-set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 dns-server 192.168.10.1
+set service dhcp-server shared-nework-name LAN10 subnet 192.168.10.0/24 dns-server 192.168.10.1
 
 set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 start 192.168.10.50
 set service dhcp-server shared-network-name LAN10 subnet 192.168.10.0/24 range 0 stop 192.168.10.200
