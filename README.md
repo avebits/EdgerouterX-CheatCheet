@@ -21,19 +21,14 @@ WIP document notes:
 - P1-3 == LAN
 - P4   == WAN
 
-192.168.1.1/24 on Port 0. 
-
-ssh username@192.168.1.1
+--> 192.168.1.1/24 on Port 0. 
+--> ssh username@192.168.1.1
 
 #### shared-network-name = DHCP scope container
 #### shared-network-name → DHCP configuration grouping (service layer)
-
-
-vif = VLAN interface (actual network interface)
-
-vif → interface (Layer 3 binding to a VLAN)
-
-" Traffic tagged with VLAN 10 arrives → goes to this interface"
+#### vif = VLAN interface (actual network interface)
+#### vif → interface (Layer 3 binding to a VLAN)
+#### " Traffic tagged with VLAN 10 arrives → goes to this interface"
 
 vif 10              → VLAN ID
 192.168.10.0/24     → subnet
