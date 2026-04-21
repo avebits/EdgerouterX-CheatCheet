@@ -1,6 +1,6 @@
 # EdgerouterX-CheatSheet
 
-Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP)
+Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X
 
 ## ToDo
 - Clean up this document
@@ -8,11 +8,11 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towar
 - Segment on vyos.io ?
 - ???
 
-# Topics:
+# Segments
 - Basics
 - Advanced
 - Full VLAN+DHCP setup
-- 
+
 
 ## Basics
 
@@ -28,7 +28,7 @@ WIP document notes:
 #### shared-network-name → DHCP configuration grouping (service layer)
 #### vif = VLAN interface (actual network interface)
 #### vif → interface (Layer 3 binding to a VLAN)
-#### " Traffic tagged with VLAN 10 arrives → goes to this interface"
+#### "Traffic tagged with VLAN 10 arrives → goes to this interface"
 
 vif 10              → VLAN ID
 192.168.10.0/24     → subnet
