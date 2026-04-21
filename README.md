@@ -1,4 +1,5 @@
-# EdgerouterX-cheatsheet
+# EdgerouterX-CheatSheet
+
 Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towards ER-X-SFP)
 
 ## ToDo
@@ -15,7 +16,7 @@ Cheatcheet for cli setup of the infamous Ubiquiti Edgerouter X (especially towar
 
 ## Basics
 
-Starting notes. WIP document follows... :
+WIP document notes:
 - P0   == Admin
 - P1-3 == LAN
 - P4   == WAN
