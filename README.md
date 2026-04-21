@@ -73,11 +73,11 @@ set interfaces ethernet eth3 disable
 ```
 
 ### LAN (eth1-eth3) as a switch (sw0), with gateway IP 192.168.10.1/24:
-
+```
 eth1 ─┐
 eth2 ─┼── switch0 (192.168.10.1/24) → router
 eth3 ─┘
-
+```
 
 ```
 set interfaces switch switch0
